@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion — Centre de Formation</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-body">
+
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="logo-icon">🎓</div>
+      <span>CentreFormation</span>
+    </div>
+
+    <h1 class="auth-title">Connexion</h1>
+    <p class="auth-sub">Accédez à votre espace de gestion</p>
+
+    <div class="alert" id="alert-login"></div>
+
+    <div class="form-group">
+      <label for="email">Adresse e-mail</label>
+      <input type="email" id="email" placeholder="vous@example.com" autocomplete="email">
+    </div>
+
+    <div class="form-group">
+      <label for="password">Mot de passe</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+
+    <button class="btn btn-primary btn-full" id="btn-login">Se connecter</button>
+
+    <p class="auth-link">
+      Pas encore de compte ? <a href="register.html">Créer un compte</a>
+    </p>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Si déjà connecté → rediriger selon le rôle
+    if (isAuthenticated()) redirectByRole(getUser().role);
+
+    document.getElementById('btn-login').addEventListener('click', async () => {
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        showAlert('alert-login', 'Veuillez remplir tous les champs.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-login');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div> Connexion…';
+
+      const result = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+
+      btn.disabled = false;
+      btn.innerHTML = 'Se connecter';
+
+      if (result && result.ok) {
+        const { token, user } = result.data;
+        saveAuth(token, user);
+        redirectByRole(user.role);
+      } else {
+        showAlert('alert-login', result?.data?.message || 'Identifiants incorrects.', 'error');
+      }
+    });
+
+    document.getElementById('password').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('btn-login').click();
+    });
+
+    /**
+     * Redirection selon le rôle renvoyé par l'API.
+     * Valeurs acceptées : admin, formateur, trainer, etudiant, student
+     */
+    function redirectByRole(role) {
+      switch ((role || '').toLowerCase()) {
+        case 'admin':
+          window.location.href = 'dashboard.html'; break;
+        case 'formateur':
+        case 'trainer':
+          window.location.href = 'trainer-dashboard.html'; break;
+        case 'etudiant':
+        case 'student':
+          window.location.href = 'student-dashboard.html'; break;
+        default:
+          window.location.href = 'dashboard.html';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Éditeurs
+.vscode/
+.idea/
+
+# Logs éventuels
+*.log
+
+# Variables sensibles si tu en ajoutes plus tard
+.env

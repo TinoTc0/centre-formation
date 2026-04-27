@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Espace Formateur — Centre de Formation</title>
+  <link rel="stylesheet" href="dashboard.css">
+  <meta name="theme-color" content="#4338ca">
+  <style>
+    /* ── Trainer-specific overrides ─────────────────────── */
+    .theme-trainer .welcome-banner {
+      background: linear-gradient(135deg, #312e81 0%, #4f46e5 55%, #6366f1 100%);
+    }
+    .theme-trainer .brand-icon {
+      background: linear-gradient(135deg, #6366f1, #4338ca);
+    }
+    .theme-trainer .user-ava,
+    .theme-trainer .profile-avatar-lg {
+      background: linear-gradient(135deg, #6366f1, #4338ca);
+    }
+    .theme-trainer .stat-card::after {
+      background: linear-gradient(90deg, #6366f1, #4338ca);
+    }
+    .theme-trainer .progress-fill {
+      background: linear-gradient(90deg, #818cf8, #4f46e5);
+    }
+    .theme-trainer .nav-item.active { border-left-color: #818cf8; }
+    .theme-trainer .nav-item.active .nav-icon { color: #818cf8; }
+    .theme-trainer .nav-badge { background: #6366f1; }
+    .theme-trainer .fc-icon { background: #eef2ff; }
+    .theme-trainer .stat-icon.indigo { background: #eef2ff; }
+
+    /* Student list card */
+    .student-list-item {
+      display: flex;
+      align-items: center;
+      gap: .9rem;
+      padding: .9rem 1.5rem;
+      border-bottom: 1px solid var(--gray-100);
+      transition: background var(--transition);
+    }
+    .student-list-item:last-child { border-bottom: none; }
+    .student-list-item:hover { background: var(--gray-50); }
+    .student-mini-ava {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #4338ca);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 800; color: #fff;
+      flex-shrink: 0;
+    }
+    .student-mini-name  { font-size: .9rem; font-weight: 700; color: var(--gray-900); }
+    .student-mini-email { font-size: .75rem; color: var(--gray-400); }
+    .student-mini-right { margin-left: auto; display: flex; align-items: center; gap: .5rem; }
+
+    /* Stats dashboard grid 2-col */
+    .btn-danger { background: #ef4444 !important; color: #fff !important; }
+    .btn-danger:hover { background: #dc2626 !important; }
+    .trainer-overview {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      margin-top: 1.5rem;
+    }
+    @media(max-width:900px) { .trainer-overview { grid-template-columns: 1fr; } }
+
+    /* Formulaire inscription */
+    #sec-enroll .table-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+    }
+
+    #sec-enroll .form-group {
+      margin-bottom: 1.2rem;
+    }
+
+    #sec-enroll .form-group label {
+      display: block;
+      font-size: .75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--gray-400);
+      margin-bottom: .4rem;
+    }
+
+    #sec-enroll select {
+      width: 100%;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      color: var(--gray-900);
+      font-family: var(--font-body);
+      font-size: .9rem;
+      padding: .65rem .9rem;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      cursor: pointer;
+    }
+
+    #sec-enroll select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+    }
+  </style>
+</head>
+<body class="theme-trainer">
+
+<div class="sidebar-overlay"></div>
+
+<div class="app-shell">
+
+  <!-- ══════════════════════════════════════════════════════
+       SIDEBAR
+       ══════════════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-icon">🏛</div>
+        <div class="brand-text">
+          <div class="brand-name">CentreFormation</div>
+          <div class="brand-sub">Espace Formateur</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="user-ava" id="sb-avatar">?</div>
+      <div class="user-details">
+        <div class="user-name" id="sb-name">Chargement…</div>
+        <div class="user-role" id="sb-role">Formateur</div>
+      </div>
+    </div>
+
+    <nav class="nav-group">
+      <div class="nav-label">Tableau de bord</div>
+
+      <div class="nav-item active" data-section="sec-home">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label-text">Dashboard</span>
+      </div>
+
+      <div class="nav-item" data-section="sec-formations">
+        <span class="nav-icon">📚</span>
+        <span class="nav-label-text">Mes formations</span>
+        <span class="nav-badge" id="nb-formations">…</span>
+      </div>
+
+      <div class="nav-item" data-section="sec-students">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label-text">Étudiants</span>
+        <span class="nav-badge" id="nb-students">…</span>
+      </div>
+
+      <div class="nav-item" data-section="sec-enroll">
+        <span class="nav-icon">📝</span>
+        <span class="nav-label-text">Inscrire un étudiant</span>
+      </div>
+
+      <div class="nav-item" data-section="sec-profile">
+        <span class="nav-icon">👤</span>
+        <span class="nav-label-text">Mon profil</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-logout">⏻ &nbsp;Déconnexion</button>
+    </div>
+  </aside>
+
+  <!-- ══════════════════════════════════════════════════════
+       MAIN CONTENT
+       ══════════════════════════════════════════════════════ -->
+  <main class="main-content">
+
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+        <div>
+          <div class="topbar-title">Dashboard</div>
+          <div class="topbar-sub" id="top-username">—</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost btn-sm" onclick="loadAll()">↻ Actualiser</button>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <div class="alert" id="alert-global"></div>
+
+      <!-- ══════════════════════════════════════════════
+           SECTION — DASHBOARD (HOME)
+           ══════════════════════════════════════════════ -->
+      
+      <section id="sec-enroll" class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Inscrire un étudiant</div>
+            <div class="section-sub">Inscrivez un étudiant à l'une de vos formations</div>
+          </div>
+        </div>
+          
+        <div class="alert" id="alert-enroll"></div>
+          
+        <div class="table-card" style="max-width:540px;padding:1.8rem 2rem;">
+          <div class="form-group">
+            <label>Étudiant</label>
+            <select id="t-select-student">
+              <option value="">— Chargement… —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Formation</label>
+            <select id="t-select-formation">
+              <option value="">— Chargement… —</option>
+            </select>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:1rem">
+            <button class="btn btn-primary" id="btn-trainer-enroll">📝 Valider l'inscription</button>
+          </div>
+        </div>
+      </section>
+      <section id="sec-home" class="section active">
+
+        <!-- Bannière -->
+        <div class="welcome-banner">
+          <div class="welcome-eyebrow">✦ Tableau de bord formateur</div>
+          <div class="welcome-title" id="welcome-title">Bonjour !</div>
+          <div class="welcome-sub">Gérez vos formations, suivez vos étudiants et consultez vos statistiques en temps réel.</div>
+        </div>
+
+        <!-- Stats principales -->
+        <div class="stats-grid stagger">
+          <div class="stat-card">
+            <div class="stat-icon indigo">📚</div>
+            <div class="stat-label">Formations créées</div>
+            <div class="stat-value" id="stat-formations">—</div>
+            <div class="stat-trend">formations actives</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon emerald">👥</div>
+            <div class="stat-label">Étudiants suivis</div>
+            <div class="stat-value" id="stat-students">—</div>
+            <div class="stat-trend">inscrits</div>
+          </div>
+        </div>
+
+        <!-- Aperçu formations + étudiants -->
+        <div class="trainer-overview">
+          <!-- Formations récentes -->
+          <div class="table-card">
+            <div class="table-card-header">
+              <div class="table-card-title">Formations récentes</div>
+              <button class="btn btn-ghost btn-sm" onclick="showSection('sec-formations')">Voir tout →</button>
+            </div>
+            <div id="home-formations-container">
+              <div class="loading-row"><div class="spinner"></div></div>
+            </div>
+          </div>
+
+          <!-- Étudiants récents -->
+          <div class="table-card">
+            <div class="table-card-header">
+              <div class="table-card-title">Derniers étudiants</div>
+              <button class="btn btn-ghost btn-sm" onclick="showSection('sec-students')">Voir tout →</button>
+            </div>
+            <div id="home-students-container">
+              <div class="loading-row"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ══════════════════════════════════════════════
+           SECTION — MES FORMATIONS
+           ══════════════════════════════════════════════ -->
+      <section id="sec-formations" class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Mes formations</div>
+            <div class="section-sub">Formations que vous animez</div>
+          </div>
+        </div>
+        <div class="alert" id="alert-formations"></div>
+
+        <!-- Cards -->
+        <div class="cards-grid stagger" id="formations-grid">
+          <div class="loading-row" style="grid-column:1/-1">
+            <div class="spinner"></div> Chargement…
+          </div>
+        </div>
+
+        <!-- Tableau -->
+        <div class="table-card">
+          <div class="table-card-header">
+            <div class="table-card-title">Tableau détaillé</div>
+          </div>
+          <div id="formations-table-container">
+            <div class="loading-row"><div class="spinner"></div></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ══════════════════════════════════════════════
+           SECTION — ÉTUDIANTS
+           ══════════════════════════════════════════════ -->
+      <section id="sec-students" class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Étudiants assignés</div>
+            <div class="section-sub">Tous vos étudiants inscrits dans vos formations</div>
+          </div>
+        </div>
+        <div class="alert" id="alert-students"></div>
+
+        <!-- Barre de recherche simple -->
+        <div style="margin-bottom:1.2rem;">
+          <input
+            type="search"
+            id="student-search"
+            placeholder="🔍  Rechercher un étudiant…"
+            style="
+              width:100%; max-width:360px;
+              background:var(--white);
+              border:1px solid var(--gray-200);
+              border-radius:var(--radius-sm);
+              padding:.6rem 1rem;
+              font-family:var(--font-body);
+              font-size:.88rem;
+              color:var(--gray-900);
+              outline:none;
+              transition:border-color .2s;
+            "
+            oninput="filterStudents(this.value)"
+          >
+        </div>
+
+        <div class="table-card">
+          <div class="table-card-header">
+            <div class="table-card-title">Liste complète</div>
+            <div class="table-card-meta" id="students-count">—</div>
+          </div>
+          <div id="students-list-container">
+            <div class="loading-row"><div class="spinner"></div> Chargement des étudiants…</div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ══════════════════════════════════════════════
+           SECTION — PROFIL
+           ══════════════════════════════════════════════ -->
+      <section id="sec-profile" class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Mon profil</div>
+            <div class="section-sub">Vos informations formateur</div>
+          </div>
+        </div>
+        <div class="alert" id="alert-profile"></div>
+
+        <div class="profile-card" id="profile-container">
+          <div class="loading-row"><div class="spinner"></div> Chargement du profil…</div>
+        </div>
+      </section>
+
+    </div><!-- /page-body -->
+  </main>
+</div><!-- /app-shell -->
+
+<script src="dashboard.js"></script>
+<script>
+
+
+// Charger les selects pour l'inscription
+async function loadEnrollSelects() {
+  // Tous les étudiants
+  const sRes = await apiFetch('/student');
+  const students = sRes.ok ? (Array.isArray(sRes.data) ? sRes.data : []) : [];
+  document.getElementById('t-select-student').innerHTML =
+    `<option value="">— Sélectionner un étudiant —</option>` +
+    students.map(s => `<option value="${s.id}">${s.name} (${s.email})</option>`).join('');
+
+  // Formations du formateur connecté
+  const fRes = await apiFetch('/trainer/formations');
+  const formations = fRes.ok ? (Array.isArray(fRes.data) ? fRes.data : []) : [];
+  document.getElementById('t-select-formation').innerHTML =
+    `<option value="">— Sélectionner une formation —</option>` +
+    formations.map(f => `<option value="${f.id}">${f.title}</option>`).join('');
+}
+
+// Soumettre l'inscription
+document.getElementById('btn-trainer-enroll').addEventListener('click', async () => {
+  const student_id   = document.getElementById('t-select-student').value;
+  const formation_id = document.getElementById('t-select-formation').value;
+
+  if (!student_id || !formation_id) {
+    showAlert('alert-enroll', 'Veuillez sélectionner un étudiant et une formation.', 'error');
+    return;
+  }
+
+  const result = await apiFetch('/trainer/enroll', {
+    method: 'POST',
+    body: JSON.stringify({ student_id: Number(student_id), formation_id: Number(formation_id) }),
+  });
+
+  if (result.ok) {
+    showAlert('alert-enroll', 'Étudiant inscrit avec succès !', 'success');
+    document.getElementById('t-select-student').selectedIndex   = 0;
+    document.getElementById('t-select-formation').selectedIndex = 0;
+  } else {
+    showAlert('alert-enroll', result.data?.message || 'Erreur lors de l\'inscription.', 'error');
+  }
+});
+
+// Appeler au chargement
+loadEnrollSelects();
+
+
+async function deleteFormation(id) {
+  if (!confirm("Supprimer cette formation ?")) return;
+
+  const result = await apiFetch(`/formations/${id}`, { method: 'DELETE' });
+
+  if (result.ok) {
+    showAlert('alert-formations', 'Formation supprimée.', 'success');
+    loadFormations();
+  } else {
+    showAlert('alert-formations', result.data?.message || 'Erreur.', 'error');
+  }
+}
+
+/* ============================================================
+   TRAINER DASHBOARD — Logic
+   ============================================================ */
+
+let allStudents = []; // cache pour la recherche côté client
+
+// ── Init ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initDashboard();
+  loadAll();
+});
+
+// ── Chargement global ─────────────────────────────────────────
+async function loadAll() {
+  hideAlert('alert-global');
+  await Promise.all([
+    loadProfile(),
+    loadStats(),
+    loadFormations(),
+    loadStudents(),
+  ]);
+}
+
+// ── Profil — GET /api/trainer/me ──────────────────────────────
+async function loadProfile() {
+  const res = await apiFetch('/trainer/me');
+  if (!res || !res.ok) {
+    showAlert('alert-global', res?.data?.message || 'Impossible de charger le profil.', 'error');
+    return;
+  }
+
+  const user = res.data?.user || res.data || {};
+  populateSidebarUser({ ...getUser(), ...user, role: 'Formateur' });
+
+  const firstName = user.firstname || user.first_name || user.name || 'Formateur';
+  document.getElementById('welcome-title').textContent = `Bonjour, ${firstName} ! 👋`;
+  document.getElementById('top-username').textContent  = user.email || '';
+
+  document.getElementById('profile-container').innerHTML = `
+    <div class="profile-avatar-lg">${firstName.charAt(0).toUpperCase()}</div>
+    <div class="profile-name">${user.firstname || user.first_name || ''} ${user.lastname || user.last_name || user.name || ''}</div>
+    <div class="profile-role">Formateur</div>
+    <div class="profile-fields">
+      <div class="profile-field">
+        <span class="pf-label">Email</span>
+        <span class="pf-value">${user.email || '—'}</span>
+      </div>
+      <div class="profile-field">
+        <span class="pf-label">Téléphone</span>
+        <span class="pf-value">${user.phone || user.telephone || '—'}</span>
+      </div>
+      <div class="profile-field">
+        <span class="pf-label">Spécialité</span>
+        <span class="pf-value">${user.specialty || user.specialite || '—'}</span>
+      </div>
+      <div class="profile-field">
+        <span class="pf-label">Membre depuis</span>
+        <span class="pf-value">${formatDate(user.created_at || user.createdAt)}</span>
+      </div>
+      <div class="profile-field">
+        <span class="pf-label">Statut</span>
+        <span class="pf-value"><span class="badge badge-green">Actif</span></span>
+      </div>
+    </div>`;
+}
+
+// ── Statistiques — GET /api/trainer/stats ─────────────────────
+async function loadStats() {
+  const res = await apiFetch('/trainer/stats');
+  if (!res || !res.ok) return;
+
+  const s = res.data || {};
+  
+  // Uniquement les éléments qui existent encore
+  const formationsEl = document.getElementById('stat-formations');
+  const studentsEl   = document.getElementById('stat-students');
+  
+  if (formationsEl) formationsEl.textContent = s.formations ?? '—';
+  if (studentsEl)   studentsEl.textContent   = s.students   ?? '—';
+}
+
+// ── Formations — GET /api/trainer/formations ──────────────────
+async function loadFormations() {
+  showLoading('home-formations-container');
+  showLoading('formations-table-container');
+  document.getElementById('formations-grid').innerHTML =
+    `<div class="loading-row" style="grid-column:1/-1"><div class="spinner"></div> Chargement…</div>`;
+
+  const res = await apiFetch('/trainer/formations');
+  if (!res || !res.ok) {
+    showAlert('alert-formations', res?.data?.message || 'Erreur de chargement des formations.', 'error');
+    showEmpty('home-formations-container', 'Erreur de chargement');
+    showEmpty('formations-table-container', 'Erreur de chargement');
+    return;
+  }
+
+  const formations = normalizeArray(res.data);
+  document.getElementById('nb-formations').textContent = formations.length;
+
+  // ── Aperçu home (tableau compact)
+  if (formations.length === 0) {
+    showEmpty('home-formations-container', 'Aucune formation', 'Vous n\'avez pas encore de formations.');
+  } else {
+    document.getElementById('home-formations-container').innerHTML = `
+      <table class="data-table">
+        <thead><tr><th>Formation</th><th>Inscrits</th><th>Statut</th></tr></thead>
+        <tbody>
+          ${formations.slice(0, 6).map(f => `
+            <tr>
+              <td><strong>${f.title || f.name || '—'}</strong></td>
+              <td><span class="badge badge-primary">${f.total_students ?? f.enrolled_count ?? f.students_count ?? 0}</span></td>
+              <td>${buildFormationStatusBadge(f.status)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  // ── Cards grid (section formations)
+  if (formations.length === 0) {
+    document.getElementById('formations-grid').innerHTML = `
+      <div style="grid-column:1/-1">
+        <div class="empty-state">
+          <div class="es-icon">📭</div>
+          <div class="es-title">Aucune formation</div>
+          <div class="es-sub">Vous n'avez pas encore créé de formations.</div>
+        </div>
+      </div>`;
+  } else {
+    document.getElementById('formations-grid').innerHTML = formations.map(f => buildTrainerFormationCard(f)).join('');
+  }
+
+  // ── Tableau complet (section formations)
+  if (formations.length === 0) {
+    showEmpty('formations-table-container', 'Aucune formation');
+  } else {
+    document.getElementById('formations-table-container').innerHTML = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Intitulé</th><th>Durée</th><th>Capacité</th><th>Inscrits</th><th>Statut</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${formations.map((f, i) => `
+            <tr>
+              <td><span class="badge badge-primary">${i + 1}</span></td>
+              <td>
+                <strong>${f.title || f.name || '—'}</strong>
+                ${f.description ? `<br><small style="color:var(--gray-400)">${f.description.substring(0,60)}…</small>` : ''}
+              </td>
+              <td>${f.duration ? `${f.duration} mois` : '—'}</td>
+              <td>${f.capacity ?? '—'}</td>
+              <td>
+                <span class="badge badge-blue">${f.enrolled_count ?? f.students_count ?? 0}</span>
+              </td>
+              <td>${buildFormationStatusBadge(f.status)}</td>
+              <td>
+                <button class="btn btn-danger btn-sm" onclick="deleteFormation(${f.id})">🗑 Supprimer</button>
+              </td>
+
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+}
+
+// ── Étudiants — GET /api/trainer/students ────────────────────
+async function loadStudents() {
+  showLoading('home-students-container');
+  showLoading('students-list-container', 'Chargement des étudiants…');
+
+  const res = await apiFetch('/trainer/students');
+  console.log("RES DATA:", res.data);
+  if (!res || !res.ok) {
+    showAlert('alert-students', res?.data?.message || 'Erreur de chargement des étudiants.', 'error');
+    showEmpty('home-students-container', 'Erreur de chargement');
+    showEmpty('students-list-container', 'Impossible de charger les étudiants');
+    return;
+  }
+
+  allStudents = normalizeArray(res.data);
+  console.log("ALL STUDENTS:", allStudents);
+  document.getElementById('nb-students').textContent = allStudents.length;
+  renderStudents(allStudents);
+
+  // Aperçu home (5 premiers)
+  if (allStudents.length === 0) {
+    showEmpty('home-students-container', 'Aucun étudiant', 'Aucun étudiant assigné.');
+  } else {
+    document.getElementById('home-students-container').innerHTML =
+      allStudents.slice(0, 5).map(s => buildStudentMiniItem(s)).join('');
+  }
+}
+
+// ── Rendu de la liste complète des étudiants ──────────────────
+function renderStudents(students) {
+  document.getElementById('students-count').textContent = `${students.length} étudiant${students.length > 1 ? 's' : ''}`;
+  if (students.length === 0) {
+    showEmpty('students-list-container', 'Aucun résultat', 'Aucun étudiant ne correspond à votre recherche.');
+    return;
+  }
+  document.getElementById('students-list-container').innerHTML =
+    students.map(s => buildStudentFullRow(s)).join('');
+}
+
+// ── Recherche côté client ─────────────────────────────────────
+function filterStudents(query) {
+  if (!query.trim()) { renderStudents(allStudents); return; }
+  const q = query.toLowerCase();
+  const filtered = allStudents.filter(s => {
+    const name  = `${s.firstname || s.first_name || ''} ${s.lastname || s.last_name || s.name || ''}`.toLowerCase();
+    const email = (s.email || '').toLowerCase();
+    return name.includes(q) || email.includes(q);
+  });
+  renderStudents(filtered);
+}
+
+// ── Templates ─────────────────────────────────────────────────
+function buildTrainerFormationCard(f) {
+  const enrolled = f.total_students ?? f.enrolled_count ?? f.students_count ?? 0;
+  const capacity  = f.capacity || '?';
+  const fillRate  = f.capacity ? Math.round((enrolled / f.capacity) * 100) : 0;
+
+  return `
+    <div class="formation-card">
+      <div class="fc-header">
+        <div class="fc-icon">📘</div>
+        ${buildFormationStatusBadge(f.status)}
+      </div>
+      <div>
+        <div class="fc-title">${f.title || f.name || 'Formation sans titre'}</div>
+        <div class="fc-meta">
+          ${f.duration ? `⏱ ${f.duration} mois` : ''}
+        </div>
+      </div>
+      ${f.description ? `<div class="fc-desc">${f.description.substring(0,90)}${f.description.length > 90 ? '…' : ''}</div>` : ''}
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--gray-400);margin-bottom:.35rem">
+          <span>Occupation — ${enrolled}/${capacity}</span><span>${fillRate}%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${fillRate}%"></div></div>
+      </div>
+      <div class="fc-footer">
+        <span class="fc-stat">👥 ${enrolled} inscrit${enrolled > 1 ? 's' : ''}</span>
+        <span class="badge badge-blue">${capacity} places</span>
+        <button class="btn btn-danger btn-sm" onclick="deleteFormation(${f.id})">🗑 Supprimer</button>
+      </div>
+    </div>`;
+}
+
+function buildStudentMiniItem(s) {
+  const name = s.name|| '—';
+  return `
+    <div class="student-list-item">
+      <div class="student-mini-ava">${name.charAt(0).toUpperCase()}</div>
+      <div>
+        <div class="student-mini-name">${name}</div>
+        <div class="student-mini-email">${s.email || '—'}</div>
+      </div>
+      <div class="student-mini-right">
+        <span class="badge badge-primary">${s.formation_title || s.formation || ''}</span>
+      </div>
+    </div>`;
+}
+
+function buildStudentFullRow(s) {
+  const name = s.name || '—';
+  return `
+    <div class="student-list-item">
+      <div class="student-mini-ava">${name.charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0">
+        <div class="student-mini-name">${name}</div>
+        <div class="student-mini-email">${s.email || '—'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;justify-content:flex-end">
+        <span class="badge badge-blue">Inscrit</span>
+        <span style="font-size:.75rem;color:var(--gray-400)">${s.created_at ? new Date(s.created_at).toLocaleDateString('fr-FR') : '—'}</span>
+      </div>
+    </div>`;
+}
+
+function buildFormationStatusBadge(status) {
+  const map = {
+    'active':    ['badge-green', 'Active'],
+    'actif':     ['badge-green', 'Active'],
+    'inactive':  ['badge-gray',  'Inactive'],
+    'inactif':   ['badge-gray',  'Inactive'],
+    'complet':   ['badge-amber', 'Complet'],
+    'full':      ['badge-amber', 'Complet'],
+    'archivé':   ['badge-rose',  'Archivée'],
+    'archived':  ['badge-rose',  'Archivée'],
+  };
+  const norm = (status || '').toLowerCase();
+  const [cls, label] = map[norm] || ['badge-primary', status || 'Active'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+</script>
+</body>
+</html>

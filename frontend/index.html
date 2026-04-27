@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centre de Formation</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Page d'accueil minimaliste pendant la vérification du token */
+    body { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+    .splash {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      color: var(--text-muted);
+      font-size: .9rem;
+    }
+    .splash .logo {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem;
+      margin-bottom: .5rem;
+    }
+    .splash strong { color: var(--text); font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+  <div class="splash">
+    <div class="logo">🎓</div>
+    <strong>CentreFormation</strong>
+    <div class="spinner"></div>
+    <span>Redirection…</span>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Point d'entrée : redirige selon l'état d'auth
+    if (isAuthenticated()) {
+      window.location.href = 'dashboard.html';
+    } else {
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formations — Centre de Formation</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-shell">
+    <!-- ── Sidebar ─────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">🎓</div>
+        <span>CentreFormation</span>
+      </div>
+
+      <span class="nav-section-title">Navigation</span>
+      <a href="dashboard.html"  class="nav-link"><span class="icon">📊</span> Dashboard</a>
+      <a href="students.html"   class="nav-link"><span class="icon">👥</span> Étudiants</a>
+      <a href="trainers.html" class="nav-link"><span class="icon">👨‍🏫</span> Formateurs</a>
+      <a href="formations.html" class="nav-link"><span class="icon">📚</span> Formations</a>
+
+      <div class="sidebar-footer">
+        <div class="user-badge">
+          <div class="user-avatar" id="sidebar-avatar">U</div>
+          <div class="user-info">
+            <div class="user-name" id="sidebar-username">—</div>
+            <div class="user-role" id="sidebar-role">—</div>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-sm btn-logout" id="btn-logout">⏻ Déconnexion</button>
+      </div>
+    </aside>
+
+    <!-- ── Contenu principal ───────────────────────────── -->
+    <main class="main-content">
+      <div class="topbar">
+        <h1>Gestion des formations</h1>
+        <div class="topbar-actions">
+          <button class="btn btn-primary btn-sm" id="btn-open-add">+ Ajouter une formation</button>
+        </div>
+      </div>
+
+      <div class="page-body">
+
+        <div class="alert" id="alert-formations"></div>
+
+        <div class="table-card">
+          <div class="table-card-header">
+            <span class="table-card-title">Liste des formations</span>
+            <button class="btn btn-ghost btn-sm" id="btn-refresh">↻ Actualiser</button>
+          </div>
+          <div id="formations-container">
+            <div class="loading-overlay">
+              <div class="spinner"></div> Chargement…
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ── Modale Ajouter Formation ───────────────────────── -->
+  <div class="modal-overlay" id="modal-add-formation">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">Ajouter une formation</span>
+        <button class="modal-close" onclick="closeModal('modal-add-formation')">✕</button>
+      </div>
+
+      <div class="alert" id="alert-modal-f"></div>
+
+      <div class="form-group">
+        <label for="f-title">Intitulé de la formation</label>
+        <input type="text" id="f-title" placeholder="ex : Développement Web Full Stack">
+      </div>
+      <div class="form-group">
+        <label for="f-description">Description</label>
+        <textarea id="f-description" rows="3" placeholder="Objectifs, programme…" style="resize:vertical"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="f-duration">Durée (en heures)</label>
+        <input type="number" id="f-duration" placeholder="ex : 120" min="1">
+      <div class="form-group">
+        <label for="f-capacity">Capacité (places)</label>
+        <input type="number" id="f-capacity" placeholder="ex : 20" min="1">
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal('modal-add-formation')">Annuler</button>
+        <button class="btn btn-primary" id="btn-save-formation">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="modal-overlay" id="modal-students">
+    <div class="modal" style="max-width:600px">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-students-title">Étudiants inscrits</span>
+        <button class="modal-close" onclick="closeModal('modal-students')">✕</button>
+      </div>
+      <div id="modal-students-content">
+        <div class="loading-overlay"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    requireAuth();
+    initSidebar();
+
+    async function deleteFormation(id) {
+      if (!confirm("Supprimer cette formation ?")) return;
+
+      const result = await apiFetch(`/formations/${id}`, { method: 'DELETE' });
+
+      if (result.ok) {
+        showAlert('alert-formations', 'Formation supprimée.', 'success');
+        loadFormations();
+      } else {
+        showAlert('alert-formations', result.data?.message || 'Erreur lors de la suppression.', 'error');
+      }
+    }
+    async function loadFormations() {
+      document.getElementById('formations-container').innerHTML = `
+        <div class="loading-overlay"><div class="spinner"></div> Chargement…</div>`;
+      hideAlert('alert-formations');
+
+      const result = await apiFetch('/formations');
+
+      if (!result.ok) {
+        showAlert('alert-formations', result.data?.message || 'Erreur de chargement.', 'error');
+        showEmpty('formations-container', 'Impossible de charger les formations.');
+        return;
+      }
+
+      // Mettre à jour la variable globale
+      formations = Array.isArray(result.data) ? result.data : (result.data.data || []);
+
+      if (formations.length === 0) {
+        showEmpty('formations-container', 'Aucune formation disponible pour le moment.');
+        return;
+      }
+      // ... reste du code
+          document.getElementById('formations-container').innerHTML = `
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Intitulé</th>
+                  <th>Formateur</th>
+                  <th>Durée</th>
+                  <th>Capacité</th>
+                  <th>Inscrits</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${formations.map(f => `
+                  <tr>
+                    <td><span class="badge badge-orange">${f.id}</span></td>
+                    <td>
+                      <strong>${f.title || f.name || '—'}</strong>
+                      ${f.description ? `<br><small style="color:var(--text-muted)">${f.description.substring(0,80)}${f.description.length > 80 ? '…' : ''}</small>` : ''}
+                    </td>
+                    <td>${f.trainer_name || '—'}</td>
+                    <td>${f.duration ? `${f.duration} mois` : '—'}</td>
+                    <td>${f.capacity ? `<span class="badge badge-green">${f.capacity} places</span>` : '—'}</td>
+                    <td>
+                      <span class="badge badge-blue">${f.total_students || 0}</span>
+                    </td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>`;
+        }
+
+    // ── Ajout ─────────────────────────────────────────────
+    document.getElementById('btn-open-add').addEventListener('click', () => {
+      ['f-title','f-description','f-duration','f-capacity'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      hideAlert('alert-modal-f');
+      openModal('modal-add-formation');
+    });
+
+    document.getElementById('btn-save-formation').addEventListener('click', async () => {
+      const title       = document.getElementById('f-title').value.trim();
+      const description = document.getElementById('f-description').value.trim();
+      const duration    = document.getElementById('f-duration').value;
+      const capacity    = document.getElementById('f-capacity').value;
+
+      if (!title) {
+        showAlert('alert-modal-f', 'L\'intitulé de la formation est obligatoire.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-save-formation');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div>';
+
+      const body = { title, description };
+      if (duration)  body.duration = Number(duration);
+      if (capacity)  body.capacity = Number(capacity);
+
+      const result = await apiFetch('/formations', {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+
+      btn.disabled = false;
+      btn.innerHTML = 'Enregistrer';
+
+      if (result.ok) {
+        closeModal('modal-add-formation');
+        showAlert('alert-formations', 'Formation ajoutée avec succès !', 'success');
+        loadFormations();
+      } else {
+        showAlert('alert-modal-f', result.data?.message || 'Erreur lors de l\'ajout.', 'error');
+      }
+    });
+
+    // ── Init ──────────────────────────────────────────────
+    loadFormations();
+    document.getElementById('btn-refresh').addEventListener('click', loadFormations);
+
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay) overlay.classList.remove('open');
+      });
+    });
+  </script>
+</body>
+</html>
