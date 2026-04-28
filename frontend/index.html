@@ -35,14 +35,13 @@
     <span>Redirection…</span>
   </div>
 
-  <script src="app.js"></script>
-  <script>
-    // Point d'entrée : redirige selon l'état d'auth
-    if (isAuthenticated()) {
-      window.location.href = 'dashboard.html';
-    } else {
-      window.location.href = 'login.html';
-    }
-  </script>
+
+<script src="app.js"></script>
+<script>
+  if (isAuthenticated()) {
+    redirectByRole(getUser().role);
+  }
+  // Si pas connecté, ne rien faire — la landing page s'affiche
+</script>
 </body>
 </html>
