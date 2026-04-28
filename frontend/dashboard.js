@@ -10,7 +10,7 @@
 'use strict';
 
 // ── Config ───────────────────────────────────────────────────
-const API_BASE = 'http://localhost:5000/api'; // ← Adaptez à votre backend
+const API_BASE = 'https://centre-formation.onrender.com/api'; // ← Adaptez à votre backend
 
 // ── JWT Helpers ──────────────────────────────────────────────
 

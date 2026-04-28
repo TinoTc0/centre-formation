@@ -3,7 +3,7 @@
    ========================================================= */
 
 // ── Configuration ──────────────────────────────────────────
-const API_BASE = 'http://localhost:5000/api'; // ← Adaptez votre URL backend
+const API_BASE = 'https://centre-formation.onrender.com/api'; // ← Adaptez votre URL backend
 
 // ── Gestion du token JWT ────────────────────────────────────
 
