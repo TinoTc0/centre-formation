@@ -1,7 +1,7 @@
 /* =========================================================
    app.js — Utilitaires partagés & couche API
    ========================================================= */
-
+   //'https://centre-formation.onrender.com/api'
 // ── Configuration ──────────────────────────────────────────
 const API_BASE = 'https://centre-formation.onrender.com/api'; // ← Adaptez votre URL backend
 
@@ -14,8 +14,10 @@ function getToken() {
 
 /** Enregistre le token + les infos utilisateur */
 function saveAuth(token, user) {
+  console.log("SAVING TOKEN:", token);
   localStorage.setItem('jwt_token', token);
   localStorage.setItem('user_info', JSON.stringify(user));
+  console.log("TOKEN SAVED:", localStorage.getItem('jwt_token'));
 }
 
 /** Supprime l'authentification (déconnexion) */

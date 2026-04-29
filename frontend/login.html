@@ -9,6 +9,9 @@
 <body class="auth-body">
 
   <div class="auth-card">
+    <a href="index.html" style="display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem;color:var(--text-muted);margin-bottom:1rem;text-decoration:none;">
+      ← Retour à l'accueil
+    </a>
     <div class="auth-logo">
       <div class="logo-icon">🎓</div>
       <span>CentreFormation</span>
@@ -63,6 +66,7 @@
       btn.innerHTML = 'Se connecter';
 
       if (result && result.ok) {
+        console.log("LOGIN RESPONSE:", result.data); 
         const { token, user } = result.data;
         saveAuth(token, user);
         redirectByRole(user.role);

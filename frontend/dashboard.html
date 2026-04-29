@@ -3,137 +3,467 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard — Centre de Formation</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+  <title>Administration — Centre de Formation</title>
+  <link rel="stylesheet" href="dashboard.css">
+  <style>
+    .theme-admin { --primary:#0ea5a0; --primary-lt:#e6fafa; --primary-d:#0b8a86; }
+    .theme-admin .welcome-banner { background: linear-gradient(135deg,#0b8a86 0%,#0ea5a0 55%,#34d399 100%); }
+    .theme-admin .brand-icon { background: linear-gradient(135deg,#0ea5a0,#0b8a86); }
+    .theme-admin .user-ava { background: linear-gradient(135deg,#0ea5a0,#0b8a86); }
+    .theme-admin .stat-card::after { background: linear-gradient(90deg,#0ea5a0,#0b8a86); }
+    .theme-admin .nav-item.active { border-left-color:#0ea5a0; }
+    .theme-admin .nav-item.active .nav-icon { color:#0ea5a0; }
+    .theme-admin .nav-badge { background:#0ea5a0; }
 
-  <div class="app-shell">
-    <!-- ── Sidebar ─────────────────────────────────────── -->
-    <aside class="sidebar">
-      <div class="sidebar-logo">
-        <div class="logo-icon">🎓</div>
-        <span>CentreFormation</span>
-      </div>
+    .form-group { margin-bottom:1.1rem; }
+    .form-group label { display:block; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--gray-400); margin-bottom:.4rem; }
+    .form-group input, .form-group select { width:100%; background:var(--gray-50); border:1px solid var(--gray-200); border-radius:var(--radius-sm); color:var(--gray-900); font-family:var(--font-body); font-size:.9rem; padding:.65rem .9rem; outline:none; transition:border-color var(--transition),box-shadow var(--transition); }
+    .form-group input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(14,165,160,.12); }
 
-      <span class="nav-section-title">Navigation</span>
-      <a href="dashboard.html"  class="nav-link"><span class="icon">📊</span> Dashboard</a>
-      <a href="students.html"   class="nav-link"><span class="icon">👥</span> Étudiants</a>
-      <a href="trainers.html"   class="nav-link"><span class="icon">👨‍🏫</span> Formateurs</a>
-      <a href="formations.html" class="nav-link"><span class="icon">📚</span> Formations</a>
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:200; backdrop-filter:blur(4px); }
+    .modal-overlay.open { display:flex; }
+    .modal-box { background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius-lg); padding:2rem; width:100%; max-width:480px; box-shadow:var(--shadow-lg); animation:fadeIn .3s ease both; }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; }
+    .modal-title { font-size:1rem; font-weight:700; color:var(--gray-900); }
+    .modal-close { background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--gray-400); }
+    .modal-footer { display:flex; gap:.75rem; justify-content:flex-end; margin-top:1.5rem; }
+    .modal-confirm-text { font-size:.9rem; color:var(--gray-500); margin-bottom:1rem; line-height:1.6; }
 
-      <div class="sidebar-footer">
-        <div class="user-badge">
-          <div class="user-avatar" id="sidebar-avatar">U</div>
-          <div class="user-info">
-            <div class="user-name" id="sidebar-username">—</div>
-            <div class="user-role" id="sidebar-role">—</div>
-          </div>
-        </div>
-        <button class="btn btn-ghost btn-sm btn-logout" id="btn-logout">⏻ Déconnexion</button>
-      </div>
-    </aside>
-
-    <!-- ── Contenu principal ───────────────────────────── -->
-    <main class="main-content">
-      <div class="topbar">
-        <h1>Tableau de bord</h1>
-        <div class="topbar-actions">
-          <button class="btn btn-primary btn-sm" id="btn-refresh">↻ Actualiser</button>
-        </div>
-      </div>
-
-      <div class="page-body">
-
-        <!-- Alert -->
-        <div class="alert" id="alert-dash"></div>
-
-        <!-- Stats -->
-        <div class="stats-grid" id="stats-grid">
-          <!-- Chargement initial -->
-          <div class="loading-overlay" style="grid-column:1/-1">
-            <div class="spinner"></div> Chargement des statistiques…
-          </div>
-        </div>
-
-        <!-- Bienvenue -->
-        <div class="table-card" style="padding:1.5rem 1.8rem;">
-          <h2 style="font-size:1.1rem;margin-bottom:.5rem;">👋 Bienvenue sur votre espace</h2>
-          <p style="color:var(--text-muted);font-size:.9rem;">
-            Gérez vos étudiants, vos formations et vos inscriptions depuis ce tableau de bord centralisé.
-          </p>
-          <div style="display:flex;gap:.8rem;margin-top:1.2rem;flex-wrap:wrap;">
-            <a href="students.html"   class="btn btn-ghost btn-sm">👥 Gérer les étudiants</a>
-            <a href="formations.html" class="btn btn-ghost btn-sm">📚 Gérer les formations</a>
-          </div>
-        </div>
-
-      </div>
-    </main>
-  </div>
-
-  <script src="app.js"></script>
-  <script>
-    // ── Garde d'authentification
-    requireAuth();
-    initSidebar();
-
-    // ── Chargement des stats ──────────────────────────────
-    async function loadDashboard() {
-      showLoading('stats-grid', 'Chargement des statistiques…');
-      hideAlert('alert-dash');
-
-      const result = await apiFetch('/dashboard');
-
-      if (!result.ok) {
-        showAlert('alert-dash', result.data?.message || 'Impossible de charger les statistiques.', 'error');
-        document.getElementById('stats-grid').innerHTML = '';
-        return;
-      }
-
-      const stats = result.data.data;
-      // L'API renvoie : { students, formations, inscriptions } (adaptez selon votre API)
-      const cards = [
-        {
-          icon: '👥',
-          iconClass: 'blue',
-          label: 'Étudiants',
-          value: stats.students ?? stats.total_students ?? '—',
-        },
-        {
-          icon: '📚',
-          iconClass: 'orange',
-          label: 'Formations',
-          value: stats.formations ?? stats.total_formations ?? '—',
-        },
-        {
-          icon: '👨‍🏫',
-          iconClass: 'purple',
-          label: 'Formateurs',
-          value: stats.total_trainers ?? '—',
-        },
-        {
-          icon: '📝',
-          iconClass: 'green',
-          label: 'Inscriptions',
-          value: stats.inscriptions ?? stats.total_enrollments ?? '—',
-        },
-      ];
-
-      document.getElementById('stats-grid').innerHTML = cards.map(c => `
-        <div class="stat-card">
-          <div class="stat-icon ${c.iconClass}">${c.icon}</div>
-          <div>
-            <div class="stat-label">${c.label}</div>
-            <div class="stat-value">${c.value}</div>
-          </div>
-        </div>
-      `).join('');
+    @media(max-width:768px) {
+      .home-grid { grid-template-columns:1fr !important; }
     }
+  </style>
+</head>
+<body class="theme-admin">
 
-    // Chargement initial + bouton actualiser
-    loadDashboard();
-    document.getElementById('btn-refresh').addEventListener('click', loadDashboard);
-  </script>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<div class="app-shell">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-icon">🎓</div>
+        <div class="brand-text">
+          <div class="brand-name">CentreFormation</div>
+          <div class="brand-sub">Administration</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="user-ava" id="sb-avatar">A</div>
+      <div class="user-details">
+        <div class="user-name" id="sb-name">Chargement…</div>
+        <div class="user-role" id="sb-role">Administrateur</div>
+      </div>
+    </div>
+
+    <nav class="nav-group">
+      <div class="nav-label">Navigation</div>
+      <div class="nav-item active" data-section="sec-home">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label-text">Dashboard</span>
+      </div>
+      <div class="nav-item" data-section="sec-students">
+        <span class="nav-icon">👥</span>
+        <span class="nav-label-text">Étudiants</span>
+        <span class="nav-badge" id="nb-students">…</span>
+      </div>
+      <div class="nav-item" data-section="sec-trainers">
+        <span class="nav-icon">👨‍🏫</span>
+        <span class="nav-label-text">Formateurs</span>
+        <span class="nav-badge" id="nb-trainers">…</span>
+      </div>
+      <div class="nav-item" data-section="sec-formations">
+        <span class="nav-icon">📚</span>
+        <span class="nav-label-text">Formations</span>
+        <span class="nav-badge" id="nb-formations">…</span>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-logout" id="btn-logout">⏻ &nbsp;Déconnexion</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menu-toggle">☰</button>
+        <div>
+          <div class="topbar-title">Dashboard</div>
+          <div class="topbar-sub" id="top-username">—</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost btn-sm" onclick="loadAll()">↻ Actualiser</button>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="alert" id="alert-global"></div>
+
+      <!-- SECTION HOME -->
+      <section id="sec-home" class="section active">
+        <div class="welcome-banner">
+          <div class="welcome-eyebrow">✦ Panneau d'administration</div>
+          <div class="welcome-title" id="welcome-title">Bonjour, Administrateur !</div>
+          <div class="welcome-sub">Gérez vos étudiants, formateurs et formations depuis ce tableau de bord centralisé.</div>
+        </div>
+
+        <div class="stats-grid stagger">
+          <div class="stat-card">
+            <div class="stat-icon emerald">👥</div>
+            <div class="stat-label">Étudiants</div>
+            <div class="stat-value" id="stat-students">—</div>
+            <div class="stat-trend">inscrits</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon indigo">👨‍🏫</div>
+            <div class="stat-label">Formateurs</div>
+            <div class="stat-value" id="stat-trainers">—</div>
+            <div class="stat-trend">actifs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon amber">📚</div>
+            <div class="stat-label">Formations</div>
+            <div class="stat-value" id="stat-formations">—</div>
+            <div class="stat-trend">disponibles</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon sky">📝</div>
+            <div class="stat-label">Inscriptions</div>
+            <div class="stat-value" id="stat-enrollments">—</div>
+            <div class="stat-trend">au total</div>
+          </div>
+        </div>
+
+        <div class="home-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem">
+          <div class="table-card">
+            <div class="table-card-header">
+              <div class="table-card-title">Derniers étudiants</div>
+              <button class="btn btn-ghost btn-sm" onclick="showSection('sec-students')">Voir tout →</button>
+            </div>
+            <div id="home-students-preview"><div class="loading-row"><div class="spinner"></div></div></div>
+          </div>
+          <div class="table-card">
+            <div class="table-card-header">
+              <div class="table-card-title">Formations récentes</div>
+              <button class="btn btn-ghost btn-sm" onclick="showSection('sec-formations')">Voir tout →</button>
+            </div>
+            <div id="home-formations-preview"><div class="loading-row"><div class="spinner"></div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION ÉTUDIANTS -->
+      <section id="sec-students" class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Étudiants</div>
+            <div class="section-sub">Gérez les comptes étudiants</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('modal-add-student')">+ Ajouter un étudiant</button>
+        </div>
+        <div class="alert" id="alert-students"></div>
+        <div class="table-card">
+          <div class="table-card-header">
+            <div class="table-card-title">Liste des étudiants</div>
+            <button class="btn btn-ghost btn-sm" onclick="loadStudents()">↻ Actualiser</button>
+          </div>
+          <div id="students-container"><div class="loading-row"><div class="spinner"></div> Chargement…</div></div>
+        </div>
+      </section>
+
+      <!-- SECTION FORMATEURS -->
+      <section id="sec-trainers" class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Formateurs</div>
+            <div class="section-sub">Gérez les comptes formateurs</div>
+          </div>
+          <button class="btn btn-primary" onclick="openModal('modal-add-trainer')">+ Ajouter un formateur</button>
+        </div>
+        <div class="alert" id="alert-trainers"></div>
+        <div class="table-card">
+          <div class="table-card-header">
+            <div class="table-card-title">Liste des formateurs</div>
+            <button class="btn btn-ghost btn-sm" onclick="loadTrainers()">↻ Actualiser</button>
+          </div>
+          <div id="trainers-container"><div class="loading-row"><div class="spinner"></div> Chargement…</div></div>
+        </div>
+      </section>
+
+      <!-- SECTION FORMATIONS -->
+      <section id="sec-formations" class="section">
+        <div class="section-header">
+          <div>
+            <div class="section-title">Formations</div>
+            <div class="section-sub">Vue d'ensemble des formations</div>
+          </div>
+        </div>
+        <div class="alert" id="alert-formations"></div>
+        <div class="table-card">
+          <div class="table-card-header">
+            <div class="table-card-title">Liste des formations</div>
+            <button class="btn btn-ghost btn-sm" onclick="loadFormations()">↻ Actualiser</button>
+          </div>
+          <div id="formations-container"><div class="loading-row"><div class="spinner"></div> Chargement…</div></div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODALE ÉTUDIANT -->
+<div class="modal-overlay" id="modal-add-student">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Ajouter un étudiant</span>
+      <button class="modal-close" onclick="closeModal('modal-add-student')">✕</button>
+    </div>
+    <div class="alert" id="alert-modal-student"></div>
+    <div class="form-group"><label>Nom complet</label><input type="text" id="s-name" placeholder="Jean Dupont"></div>
+    <div class="form-group"><label>E-mail</label><input type="email" id="s-email" placeholder="jean@example.com"></div>
+    <div class="form-group"><label>Téléphone</label><input type="tel" id="s-phone" placeholder="+261 34 00 000 00"></div>
+    <div class="form-group"><label>Mot de passe</label><input type="password" id="s-password" placeholder="Minimum 6 caractères"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-student')">Annuler</button>
+      <button class="btn btn-primary" id="btn-save-student">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE FORMATEUR -->
+<div class="modal-overlay" id="modal-add-trainer">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Ajouter un formateur</span>
+      <button class="modal-close" onclick="closeModal('modal-add-trainer')">✕</button>
+    </div>
+    <div class="alert" id="alert-modal-trainer"></div>
+    <div class="form-group"><label>Nom complet</label><input type="text" id="t-name" placeholder="Marie Dupont"></div>
+    <div class="form-group"><label>E-mail</label><input type="email" id="t-email" placeholder="marie@example.com"></div>
+    <div class="form-group"><label>Mot de passe</label><input type="password" id="t-password" placeholder="Minimum 6 caractères"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-trainer')">Annuler</button>
+      <button class="btn btn-primary" id="btn-save-trainer">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE SUPPRESSION -->
+<div class="modal-overlay" id="modal-confirm-delete">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-header">
+      <span class="modal-title">Confirmer la suppression</span>
+      <button class="modal-close" onclick="closeModal('modal-confirm-delete')">✕</button>
+    </div>
+    <p class="modal-confirm-text">Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.</p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-confirm-delete')">Annuler</button>
+      <button class="btn btn-danger" id="btn-confirm-delete">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<script src="dashboard.js"></script>
+<script>
+let deleteTarget = { id: null, type: null };
+
+document.addEventListener('DOMContentLoaded', () => {
+  initDashboard();
+  const user = getUser();
+  const name = user.name || user.email || 'Administrateur';
+  document.getElementById('welcome-title').textContent = `Bonjour, ${name} !`;
+  document.getElementById('top-username').textContent = user.email || '';
+  loadAll();
+
+  // Mobile sidebar
+  document.getElementById('menu-toggle').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('open');
+  });
+  document.getElementById('sidebar-overlay').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('open');
+  });
+});
+
+async function loadAll() {
+  await Promise.all([loadStats(), loadStudents(), loadTrainers(), loadFormations()]);
+}
+
+async function loadStats() {
+  const res = await apiFetch('/dashboard');
+  if (!res || !res.ok) return;
+  const stats = res.data?.data || res.data || {};
+  document.getElementById('stat-students').textContent    = stats.total_students    ?? '—';
+  document.getElementById('stat-trainers').textContent    = stats.total_trainers    ?? '—';
+  document.getElementById('stat-formations').textContent  = stats.total_formations  ?? '—';
+  document.getElementById('stat-enrollments').textContent = stats.total_enrollments ?? '—';
+}
+
+async function loadStudents() {
+  showLoading('students-container');
+  showLoading('home-students-preview');
+  const res = await apiFetch('/student');
+  if (!res || !res.ok) { showEmpty('students-container','Impossible de charger.'); return; }
+  const students = normalizeArray(res.data);
+  document.getElementById('nb-students').textContent = students.length;
+
+  document.getElementById('home-students-preview').innerHTML = students.length === 0
+    ? '<div class="empty-state"><div class="es-icon">📭</div><div class="es-title">Aucun étudiant</div></div>'
+    : `<table class="data-table"><thead><tr><th>Nom</th><th>E-mail</th></tr></thead><tbody>
+        ${students.slice(0,5).map(s=>`<tr><td><strong>${s.name||'—'}</strong></td><td style="color:var(--gray-400)">${s.email||'—'}</td></tr>`).join('')}
+       </tbody></table>`;
+
+  if (students.length === 0) { showEmpty('students-container','Aucun étudiant enregistré.'); return; }
+  document.getElementById('students-container').innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>#</th><th>Nom</th><th>E-mail</th><th>Téléphone</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${students.map(s=>`
+          <tr>
+            <td><span class="badge badge-primary">${s.id}</span></td>
+            <td><strong>${s.name||'—'}</strong></td>
+            <td style="color:var(--gray-400)">${s.email||'—'}</td>
+            <td style="color:var(--gray-400)">${s.phone||'—'}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="askDelete(${s.id},'student')">🗑 Supprimer</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function loadTrainers() {
+  showLoading('trainers-container');
+  const res = await apiFetch('/trainer');
+  if (!res || !res.ok) { showEmpty('trainers-container','Impossible de charger.'); return; }
+  const trainers = normalizeArray(res.data);
+  document.getElementById('nb-trainers').textContent = trainers.length;
+  if (trainers.length === 0) { showEmpty('trainers-container','Aucun formateur enregistré.'); return; }
+  document.getElementById('trainers-container').innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>#</th><th>Nom</th><th>E-mail</th><th>Membre depuis</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${trainers.map(t=>`
+          <tr>
+            <td><span class="badge badge-primary">${t.id}</span></td>
+            <td><strong>${t.name||'—'}</strong></td>
+            <td style="color:var(--gray-400)">${t.email||'—'}</td>
+            <td style="color:var(--gray-400)">${t.created_at?new Date(t.created_at).toLocaleDateString('fr-FR'):'—'}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="askDelete(${t.id},'trainer')">🗑 Supprimer</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function loadFormations() {
+  showLoading('formations-container');
+  showLoading('home-formations-preview');
+  const res = await apiFetch('/formations');
+  if (!res || !res.ok) { showEmpty('formations-container','Impossible de charger.'); return; }
+  const formations = normalizeArray(res.data);
+  document.getElementById('nb-formations').textContent = formations.length;
+
+  document.getElementById('home-formations-preview').innerHTML = formations.length === 0
+    ? '<div class="empty-state"><div class="es-icon">📭</div><div class="es-title">Aucune formation</div></div>'
+    : `<table class="data-table"><thead><tr><th>Formation</th><th>Inscrits</th></tr></thead><tbody>
+        ${formations.slice(0,5).map(f=>`<tr><td><strong>${f.title||'—'}</strong></td><td><span class="badge badge-blue">${f.total_students||0}</span></td></tr>`).join('')}
+       </tbody></table>`;
+
+  if (formations.length === 0) { showEmpty('formations-container','Aucune formation disponible.'); return; }
+  document.getElementById('formations-container').innerHTML = `
+    <table class="data-table">
+      <thead><tr><th>#</th><th>Intitulé</th><th>Formateur</th><th>Durée</th><th>Inscrits</th></tr></thead>
+      <tbody>
+        ${formations.map(f=>`
+          <tr>
+            <td><span class="badge badge-amber">${f.id}</span></td>
+            <td><strong>${f.title||'—'}</strong>${f.description?`<br><small style="color:var(--gray-400)">${f.description.substring(0,60)}…</small>`:''}</td>
+            <td>${f.trainer_name?`<span class="badge badge-green">${f.trainer_name}</span>`:'—'}</td>
+            <td>${f.duration?`${f.duration} mois`:'—'}</td>
+            <td><span class="badge badge-blue">${f.total_students||0} inscrit${f.total_students>1?'s':''}</span></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// Ajout étudiant
+document.getElementById('btn-save-student').addEventListener('click', async () => {
+  const name=document.getElementById('s-name').value.trim();
+  const email=document.getElementById('s-email').value.trim();
+  const phone=document.getElementById('s-phone').value.trim();
+  const password=document.getElementById('s-password').value.trim();
+  if (!name||!email||!password) { showAlert('alert-modal-student','Nom, e-mail et mot de passe sont obligatoires.','error'); return; }
+  const btn=document.getElementById('btn-save-student');
+  btn.disabled=true; btn.innerHTML='<div class="spinner"></div>';
+  const result=await apiFetch('/student',{method:'POST',body:JSON.stringify({name,email,phone,password,role:'etudiant'})});
+  btn.disabled=false; btn.innerHTML='Enregistrer';
+  if (result.ok) {
+    closeModal('modal-add-student');
+    ['s-name','s-email','s-phone','s-password'].forEach(id=>document.getElementById(id).value='');
+    showAlert('alert-students','Étudiant ajouté avec succès !','success');
+    loadStudents();
+  } else { showAlert('alert-modal-student',result.data?.message||'Erreur lors de l\'ajout.','error'); }
+});
+
+// Ajout formateur
+document.getElementById('btn-save-trainer').addEventListener('click', async () => {
+  const name=document.getElementById('t-name').value.trim();
+  const email=document.getElementById('t-email').value.trim();
+  const password=document.getElementById('t-password').value.trim();
+  if (!name||!email||!password) { showAlert('alert-modal-trainer','Tous les champs sont obligatoires.','error'); return; }
+  const btn=document.getElementById('btn-save-trainer');
+  btn.disabled=true; btn.innerHTML='<div class="spinner"></div>';
+  const result=await apiFetch('/trainer',{method:'POST',body:JSON.stringify({name,email,password})});
+  btn.disabled=false; btn.innerHTML='Enregistrer';
+  if (result.ok) {
+    closeModal('modal-add-trainer');
+    ['t-name','t-email','t-password'].forEach(id=>document.getElementById(id).value='');
+    showAlert('alert-trainers','Formateur ajouté avec succès !','success');
+    loadTrainers();
+  } else { showAlert('alert-modal-trainer',result.data?.message||'Erreur lors de l\'ajout.','error'); }
+});
+
+// Suppression
+function askDelete(id, type) { deleteTarget={id,type}; openModal('modal-confirm-delete'); }
+document.getElementById('btn-confirm-delete').addEventListener('click', async () => {
+  const {id,type}=deleteTarget;
+  if (!id||!type) return;
+  const btn=document.getElementById('btn-confirm-delete');
+  btn.disabled=true; btn.innerHTML='<div class="spinner"></div>';
+  const url=type==='student'?`/student/${id}`:`/trainer/${id}`;
+  const result=await apiFetch(url,{method:'DELETE'});
+  btn.disabled=false; btn.innerHTML='Supprimer';
+  closeModal('modal-confirm-delete');
+  deleteTarget={id:null,type:null};
+  if (result.ok) {
+    const msg=type==='student'?'Étudiant supprimé.':'Formateur supprimé.';
+    const alertId=type==='student'?'alert-students':'alert-trainers';
+    showAlert(alertId,msg,'success');
+    if(type==='student') loadStudents(); else loadTrainers();
+  } else { showAlert('alert-global',result.data?.message||'Erreur.','error'); }
+});
+
+// Modales
+function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); });
+});
+
+// Mobile
+document.getElementById('menu-toggle').addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+});
+document.getElementById('sidebar-overlay').addEventListener('click',()=>{
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+});
+</script>
 </body>
 </html>

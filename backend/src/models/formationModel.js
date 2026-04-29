@@ -2,8 +2,8 @@ const db = require("../config/db");
 
 const Formation = {
   create: (data, callback) => {
-    const sql =
-      "INSERT INTO formations (title, duration, description) VALUES (?, ?, ?, ?)";
+    console.log("DATA FORMATION:", data);
+    const sql = "INSERT INTO formations (title, duration, description, trainer_id) VALUES (?, ?, ?, ?)";
     db.query(sql, [data.title, data.duration, data.description, data.trainer_id], callback);
   },
 

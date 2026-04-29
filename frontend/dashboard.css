@@ -229,6 +229,8 @@ input, select, textarea { font-family: var(--font-body); }
   justify-content: center;
 }
 .btn-logout:hover { background: rgba(239,68,68,.2); border-color: rgba(239,68,68,.4); color: #ef4444; }
+.btn-danger { background: #ef4444 !important; color: #fff !important; }
+.btn-danger:hover { background: #dc2626 !important; }
 
 /* ── Main content ──────────────────────────────────────────── */
 .main-content {
@@ -616,6 +618,7 @@ input, select, textarea { font-family: var(--font-body); }
   .sidebar {
     transform: translateX(-100%);
     box-shadow: var(--shadow-lg);
+    display: flex;
   }
   .sidebar.open { transform: translateX(0); }
   .sidebar-overlay.open { display: block; }
